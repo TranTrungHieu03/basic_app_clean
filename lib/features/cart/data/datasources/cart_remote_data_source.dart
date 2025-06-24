@@ -20,7 +20,10 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   @override
   Future<CartModel> addToCart(AddToCartDto params) async {
     try {
-      final response = await _apiServices.post('carts/add', params.toJson());
+      final response = await _apiServices.put(
+        'carts/${params.userId}',
+        params.toJson(),
+      );
 
       final responseFormat = ApiResponse.fromJson(response);
       if (responseFormat.message != null) {
@@ -35,16 +38,13 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   @override
   Future<CartModel> getCarts(GetCartByUserDto params) async {
     try {
-      final response = await _apiServices.get(
-        'carts/user/${params.userId}',
-        {},
-      );
+      final response = await _apiServices.get('carts/${params.userId}', {});
 
       final responseFormat = ApiResponse.fromJson(response);
       if (responseFormat.message != null) {
         throw ApiFailure(message: responseFormat.message!);
       }
-      return CartModel.fromJson(responseFormat.data['carts']);
+      return CartModel.fromJson(responseFormat.data);
     } on AppException catch (e) {
       throw ApiFailure(message: e.toString());
     }

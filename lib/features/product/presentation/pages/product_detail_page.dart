@@ -1,15 +1,9 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:store_demo/core/common/widgets/rounded_icon.dart';
-import 'package:store_demo/core/common/widgets/rounded_image.dart';
-import 'package:store_demo/core/services/logger.dart';
+import 'package:store_demo/core/common/widgets/show_snackbar.dart';
 import 'package:store_demo/core/utils/constants/colors.dart';
-import 'package:store_demo/core/utils/constants/env.dart';
 import 'package:store_demo/core/utils/constants/sizes.dart';
 import 'package:store_demo/features/auth/presentation/blocs/auth/auth_bloc.dart';
 import 'package:store_demo/features/cart/domain/usecases/add_to_cart.dart';
@@ -17,7 +11,6 @@ import 'package:store_demo/features/cart/presentation/blocs/cart/cart_bloc.dart'
 import 'package:store_demo/features/product/domain/entities/product_entity.dart';
 import 'package:store_demo/features/product/domain/usecases/get_product_detail.dart';
 import 'package:store_demo/features/product/presentation/blocs/product/product_bloc.dart';
-import 'package:store_demo/features/product/presentation/cubits/carousel/carousel_cubit.dart';
 import 'package:store_demo/features/product/presentation/widgets/image_list.dart';
 import 'package:store_demo/init_dependencies.dart';
 
@@ -67,64 +60,62 @@ class ProductDetailPage extends StatelessWidget {
     );
   }
 
-  Padding BottomProductBar(ProductEntity product, BuildContext context) {
+  Widget BottomProductBar(ProductEntity product, BuildContext context) {
     final authState = context.read<AuthBloc>().state as AuthLoaded;
-    return Padding(
-      padding: EdgeInsetsGeometry.symmetric(
-        vertical: TSizes.lg,
-        horizontal: TSizes.sm,
-      ),
+    return BlocListener<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state is CartLoaded) {
+          TSnackBar.successSnackBar(context, message: 'Add to cart success');
+        }
+        if (state is CartError) {
+          TSnackBar.errorSnackBar(context, message: state.message);
+        }
+      },
+      child: Padding(
+        padding: EdgeInsetsGeometry.symmetric(
+          vertical: TSizes.lg,
+          horizontal: TSizes.sm,
+        ),
 
-      child: Container(
-        color: Colors.white70,
-        height: 50,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "\$${product.price} ",
-                  style: Theme.of(context)!.textTheme.headlineSmall!.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: TColors.darkerGrey,
+        child: Container(
+          color: Colors.white70,
+          height: 50,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "\$${product.price} ",
+                    style: Theme.of(context)!.textTheme.headlineSmall!.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: TColors.darkerGrey,
+                    ),
                   ),
-                ),
 
-                Text(
-                  "\$${(product.price * (100 - product.discountPercentage) / 100).toStringAsFixed(2)} ",
-                  style: Theme.of(context)!.textTheme.labelMedium!.copyWith(
-                    decoration: TextDecoration.lineThrough,
-                    fontWeight: FontWeight.w400,
-                    color: TColors.primary,
+                  Text(
+                    "\$${(product.price * (100 - product.discountPercentage) / 100).toStringAsFixed(2)} ",
+                    style: Theme.of(context)!.textTheme.labelMedium!.copyWith(
+                      decoration: TextDecoration.lineThrough,
+                      fontWeight: FontWeight.w400,
+                      color: TColors.primary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(TSizes.sm),
-                    border: BoxBorder.all(color: TColors.primary),
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.read<CartBloc>().add(
-                          AddToCartEvent(
-                            AddToCartDto(
-                              userId: authState.user.id.toString(),
-                              products: [
-                                ProductCartDto(quantity: 1, id: product.id),
-                              ],
-                            ),
-                          ),
-                        ),
-                        child: Padding(
+                ],
+              ),
+              Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(TSizes.sm),
+                      border: BoxBorder.all(color: TColors.primary),
+                    ),
+                    child: Row(
+                      children: [
+                        Padding(
                           padding: const EdgeInsets.all(TSizes.sm),
                           child: Icon(
                             Iconsax.heart,
@@ -132,39 +123,52 @@ class ProductDetailPage extends StatelessWidget {
                             size: 25,
                           ),
                         ),
-                      ),
-                      VerticalDivider(
-                        thickness: 1,
-                        indent: 5,
-                        endIndent: 5,
-                        color: TColors.primary,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(TSizes.sm),
-                        child: Icon(
-                          Iconsax.shopping_bag,
+
+                        VerticalDivider(
+                          thickness: 1,
+                          indent: 5,
+                          endIndent: 5,
                           color: TColors.primary,
-                          size: 25,
                         ),
-                      ),
-                    ],
+                        GestureDetector(
+                          onTap: () => context.read<CartBloc>().add(
+                            AddToCartEvent(
+                              AddToCartDto(
+                                userId: authState.user.id.toString(),
+                                products: [
+                                  ProductCartDto(quantity: 1, id: product.id),
+                                ],
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(TSizes.sm),
+                            child: Icon(
+                              Iconsax.shopping_bag,
+                              color: TColors.primary,
+                              size: 25,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: TSizes.sm),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text("Buy now"),
-                      const SizedBox(width: TSizes.sm),
-                      Icon(Iconsax.arrow_right_1, size: 20, weight: 90),
-                    ],
+                  const SizedBox(width: TSizes.sm),
+                  ElevatedButton(
+                    onPressed: () {},
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text("Buy now"),
+                        const SizedBox(width: TSizes.sm),
+                        Icon(Iconsax.arrow_right_1, size: 20, weight: 90),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

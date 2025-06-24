@@ -5,8 +5,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:store_demo/core/common/widgets/rounded_icon.dart';
 import 'package:store_demo/core/common/widgets/shimmer_effect.dart';
+import 'package:store_demo/core/common/widgets/show_snackbar.dart';
 import 'package:store_demo/core/utils/constants/colors.dart';
 import 'package:store_demo/core/utils/constants/sizes.dart';
 import 'package:store_demo/features/auth/presentation/blocs/auth/auth_bloc.dart';
@@ -14,7 +14,6 @@ import 'package:store_demo/features/cart/domain/entities/cart_product_entity.dar
 import 'package:store_demo/features/cart/domain/usecases/get_cart_by_user.dart';
 import 'package:store_demo/features/cart/presentation/blocs/cart/cart_bloc.dart';
 import 'package:store_demo/features/cart/presentation/widgets/shipping_information.dart';
-import 'package:store_demo/init_dependencies.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -27,45 +26,58 @@ class CartPage extends StatelessWidget {
         GetCartByUserDto(userId: authState.user.id.toString()),
       ),
     );
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Your Cart'),
-        leading: IconButton(
-          icon: Icon(Iconsax.arrow_left),
-          onPressed: () => context.pop(),
+    return BlocListener<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state is CartError) {
+          TSnackBar.errorSnackBar(context, message: state.message);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Your Cart'),
+          leading: IconButton(
+            icon: Icon(Iconsax.arrow_left),
+            onPressed: () => context.pop(),
+          ),
         ),
-      ),
-      body: Padding(
-        padding: EdgeInsetsGeometry.all(TSizes.sm),
-        child: Column(
-          children: [
-            ShippingInformation(address: "125 Ram Hoai"),
-            BlocBuilder<CartBloc, CartState>(
-              builder: (context, state) {
-                if (state is CartLoaded) {
-                  return ListView.builder(
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          ProductCart(productCart: state.cart.products[index]),
-                          Divider(
-                            thickness: 0.5,
-                            color: Colors.grey.shade300,
-                            indent: 5,
-                            endIndent: 5,
-                          ),
-                        ],
-                      );
-                    },
-                    itemCount: state.cart.products.length,
-                  );
-                } else if (state is CartLoading) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                return const SizedBox();
-              },
-            ),
-          ],
+        body: Padding(
+          padding: EdgeInsetsGeometry.all(TSizes.sm),
+          child: Column(
+            children: [
+              ShippingInformation(address: "125 Ram Hoai"),
+              const SizedBox(height: TSizes.md),
+              BlocBuilder<CartBloc, CartState>(
+                builder: (context, state) {
+                  if (state is CartLoaded) {
+                    return Expanded(
+                      child: ListView.builder(
+                        itemBuilder: (context, index) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ProductCart(
+                                productCart: state.cart.products[index],
+                              ),
+                              Divider(
+                                thickness: 0.5,
+                                color: Colors.grey.shade300,
+                                indent: 5,
+                                endIndent: 5,
+                              ),
+                            ],
+                          );
+                        },
+                        itemCount: state.cart.products.length,
+                      ),
+                    );
+                  } else if (state is CartLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  return const SizedBox();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -86,7 +98,6 @@ class ProductCart extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -107,8 +118,7 @@ class ProductCart extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: CachedNetworkImage(
-                        imageUrl:
-                            "https://cdn.dummyjson.com/products/images/womens-bags/Prada%20Women%20Bag/thumbnail.png",
+                        imageUrl: productCart.thumbnail,
                         progressIndicatorBuilder:
                             (context, url, downloadProgress) {
                               return TShimmerEffect(
@@ -127,9 +137,14 @@ class ProductCart extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Product A",
-                          style: Theme.of(context).textTheme.titleLarge,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 0.5.sw),
+                          child: Text(
+                            productCart.title,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         const SizedBox(height: TSizes.xs),
                         Row(
@@ -142,17 +157,16 @@ class ProductCart extends StatelessWidget {
                               TextSpan(
                                 children: [
                                   TextSpan(
-                                    // text: "\$${product.price} ",
-                                    text: "1000",
+                                    text: "\$${productCart.price} ",
                                     style: Theme.of(context)!
                                         .textTheme
-                                        .headlineSmall!
-                                        .copyWith(fontWeight: FontWeight.w700),
+                                        .titleLarge!
+                                        .copyWith(fontWeight: FontWeight.w600),
                                   ),
 
                                   TextSpan(
-                                    text: "1000",
-                                    // "\$${(product.price * (100 - product.discountPercentage) / 100).toStringAsFixed(2)} ",
+                                    text:
+                                        "\$${(productCart.price * (100 - productCart.discountPercentage) / 100).toStringAsFixed(2)} ",
                                     style: Theme.of(context)!
                                         .textTheme
                                         .labelMedium!
@@ -181,8 +195,8 @@ class ProductCart extends StatelessWidget {
                                       horizontal: TSizes.xs,
                                     ),
                                     child: Text(
-                                      // "-${product.discountPercentage.toStringAsFixed(1)}\%",
-                                      "10%",
+                                      "-${productCart.discountPercentage.toStringAsFixed(1)}\%",
+
                                       style: Theme.of(context)
                                           .textTheme
                                           .labelMedium!
@@ -209,7 +223,7 @@ class ProductCart extends StatelessWidget {
                               direction: Axis.horizontal,
                             ),
                             const SizedBox(width: TSizes.xs),
-                            // Text('${product.rating}/5'),
+                            // Text('${productCart.rating}/5'),
                             Text('3/5'),
                             const SizedBox(width: TSizes.xs),
                             Text(

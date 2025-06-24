@@ -5,9 +5,9 @@ class CartProductModel {
   final String title;
   final double price;
   final int quantity;
-  final double total;
-  final double discountPercentage;
-  final double discountedTotal;
+  final double? total;
+  final double? discountPercentage;
+  final double? discountedTotal;
   final String thumbnail;
 
   CartProductModel({
@@ -69,9 +69,9 @@ class CartProductModel {
     title: title,
     price: price,
     quantity: quantity,
-    total: total,
-    discountPercentage: discountPercentage,
-    discountedTotal: discountedTotal,
+    total: total ?? 0,
+    discountPercentage: discountPercentage ?? 0,
+    discountedTotal: discountedTotal ?? 0,
     thumbnail: thumbnail,
   );
 }

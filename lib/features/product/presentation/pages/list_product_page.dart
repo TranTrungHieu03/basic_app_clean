@@ -10,14 +10,12 @@ import 'package:store_demo/core/common/widgets/show_snackbar.dart';
 import 'package:store_demo/core/services/logger.dart';
 import 'package:store_demo/core/utils/constants/colors.dart';
 import 'package:store_demo/core/utils/constants/env.dart';
-import 'package:store_demo/core/utils/constants/env.dart';
 import 'package:store_demo/core/utils/constants/images.dart';
 import 'package:store_demo/core/utils/constants/router.dart';
 import 'package:store_demo/core/utils/constants/sizes.dart';
 import 'package:store_demo/features/product/domain/entities/product_entity.dart';
 import 'package:store_demo/features/product/domain/usecases/get_list_product.dart';
 import 'package:store_demo/features/product/domain/usecases/search_product_by_category.dart';
-import 'package:store_demo/features/product/presentation/blocs/list_category/list_category_bloc.dart';
 import 'package:store_demo/features/product/presentation/blocs/list_category/list_category_bloc.dart';
 import 'package:store_demo/features/product/presentation/blocs/list_product/list_product_bloc.dart';
 import 'package:store_demo/init_dependencies.dart';
@@ -285,8 +283,6 @@ class _ListProductsState extends State<ListProducts> {
       child: BlocBuilder<ListProductBloc, ListProductState>(
         builder: (context, state) {
           if (state is ListProductLoaded) {
-            AppLogger.warning(state.pagination.totalPage.toInt());
-            AppLogger.warning(state.pagination.total);
             final products = state.products;
             return GridView.builder(
               controller: _scrollController,

@@ -1,13 +1,11 @@
 import 'package:store_demo/features/cart/data/models/cart_product_model.dart';
-
-import 'package:store_demo/features/cart/data/models/cart_product_model.dart';
 import 'package:store_demo/features/cart/domain/entities/cart_entity.dart';
 
 class CartModel {
   final int id;
   final List<CartProductModel> products;
-  final int total;
-  final int discountedTotal;
+  final double total;
+  final double discountedTotal;
   final int userId;
   final int totalProducts;
   final int totalQuantity;
@@ -25,8 +23,8 @@ class CartModel {
   CartModel copyWith({
     int? id,
     List<CartProductModel>? products,
-    int? total,
-    int? discountedTotal,
+    double? total,
+    double? discountedTotal,
     int? userId,
     int? totalProducts,
     int? totalQuantity,
@@ -42,7 +40,9 @@ class CartModel {
 
   factory CartModel.fromJson(Map<String, dynamic> json) => CartModel(
     id: json["id"],
-    products: List<CartProductModel>.from(json["products"].map((x) => x)),
+    products: (json["products"] as List)
+        .map((x) => CartProductModel.fromJson(x))
+        .toList(),
     total: json["total"],
     discountedTotal: json["discountedTotal"],
     userId: json["userId"],

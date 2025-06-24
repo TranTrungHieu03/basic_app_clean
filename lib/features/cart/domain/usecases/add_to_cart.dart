@@ -21,6 +21,7 @@ class AddToCartDto {
 
   Map<String, dynamic> toJson() => {
     'userId': userId,
+    'merge': true,
     "products": products.map((e) => e.toJson()).toList(),
   };
 }

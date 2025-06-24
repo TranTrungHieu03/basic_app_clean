@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:store_demo/core/errors/exceptions.dart';
 import 'package:store_demo/core/network/base_api_services.dart';
@@ -171,6 +169,7 @@ class DioApiServices implements BaseApiServices {
 
     switch (response.statusCode) {
       case 200:
+      case 201:
       case 400:
         return response.data;
       case 401:

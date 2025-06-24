@@ -1,12 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:store_demo/features/cart/domain/entities/cart_product_entity.dart';
-import 'package:store_demo/features/product/data/models/product_model.dart';
 
 class CartEntity extends Equatable {
   final int id;
   final List<CartProductEntity> products;
-  final int total;
-  final int discountedTotal;
+  final double total;
+  final double discountedTotal;
   final int userId;
   final int totalProducts;
   final int totalQuantity;
