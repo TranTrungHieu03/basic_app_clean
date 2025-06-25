@@ -13,6 +13,7 @@ class SplashPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        AppLogger.debug(state);
         if (state is AuthLoaded) {
           context.go(AppRouter.product);
         } else {

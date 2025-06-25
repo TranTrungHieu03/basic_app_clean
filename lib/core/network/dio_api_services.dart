@@ -19,7 +19,7 @@ class DioApiServices implements BaseApiServices {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           options.headers['Content-Type'] = 'application/json';
-          if (!options.path.contains(AppRouter.login)) {
+          if (!options.path.contains('auth/login')) {
             _token = _token ??= await localStorage.readValue(TKeyStorage.token);
 
             options.headers['Authorization'] = 'Bearer $_token';
@@ -28,31 +28,31 @@ class DioApiServices implements BaseApiServices {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            _token = null;
-            final newToken = await refreshToken();
-            if (newToken != null) {
-              final options = error.requestOptions;
-              options.headers['Authorization'] = 'Bearer $newToken';
-              AppLogger.debug(options.headers['Authorization']);
-
-              try {
-                final response = await _dio.request(
-                  options.path,
-                  options: Options(
-                    method: options.method,
-                    headers: options.headers,
-                  ),
-                  data: options.data,
-                  queryParameters: options.queryParameters,
-                );
-
-                return handler.resolve(response);
-              } on DioException catch (e) {
-                return handler.reject(e);
-              }
-            }
-          }
+          // if (error.response?.statusCode == 401) {
+          //   _token = null;
+          //   final newToken = await refreshToken();
+          //   if (newToken != null) {
+          //     final options = error.requestOptions;
+          //     options.headers['Authorization'] = 'Bearer $newToken';
+          //     AppLogger.debug(options.headers['Authorization']);
+          //
+          //     try {
+          //       final response = await _dio.request(
+          //         options.path,
+          //         options: Options(
+          //           method: options.method,
+          //           headers: options.headers,
+          //         ),
+          //         data: options.data,
+          //         queryParameters: options.queryParameters,
+          //       );
+          //
+          //       return handler.resolve(response);
+          //     } on DioException catch (e) {
+          //       return handler.reject(e);
+          //     }
+          //   }
+          // }
 
           return handler.next(error);
         },

@@ -212,11 +212,6 @@ class _ListProductPageState extends State<ListProductPage> {
         ),
         Row(
           children: [
-            TRoundedIcon(
-              icon: Iconsax.shopping_bag,
-              size: TSizes.lg,
-              onPressed: () => context.push(AppRouter.cart),
-            ),
             const SizedBox(width: TSizes.sm),
             TRoundedIcon(icon: Iconsax.notification),
             const SizedBox(width: TSizes.sm),
@@ -390,7 +385,7 @@ class _ListProductsState extends State<ListProducts> {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12.withOpacity(0.1),
+                          color: Colors.black12.withValues(alpha: 0.1),
                           blurRadius: 0,
                           spreadRadius: 0.5,
                         ),
