@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:store_demo/core/network/dio_api_services.dart';
 import 'package:store_demo/core/services/local_storage.dart';
 import 'package:store_demo/core/utils/constants/env.dart';

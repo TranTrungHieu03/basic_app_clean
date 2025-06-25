@@ -15,10 +15,9 @@ class SplashPage extends StatelessWidget {
       listener: (context, state) {
         AppLogger.debug(state);
         if (state is AuthLoaded) {
-          context.go(AppRouter.product);
-        } else {
-          context.go(AppRouter.login);
+          return context.go(AppRouter.product);
         }
+        return context.go(AppRouter.login);
       },
       child: Scaffold(
         backgroundColor: TColors.primary,

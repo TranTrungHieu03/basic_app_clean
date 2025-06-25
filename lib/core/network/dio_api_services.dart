@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:store_demo/core/errors/exceptions.dart';
 import 'package:store_demo/core/network/base_api_services.dart';
 import 'package:store_demo/core/services/local_storage.dart';
@@ -12,9 +13,13 @@ class DioApiServices implements BaseApiServices {
   final Dio _dio;
   String? _token;
   TLocalStorage localStorage;
+  final LocalAuthentication localAuthentication;
 
-  DioApiServices({required String baseUrl, required this.localStorage})
-    : _dio = Dio(BaseOptions(baseUrl: baseUrl)) {
+  DioApiServices({
+    required String baseUrl,
+    required this.localStorage,
+    required this.localAuthentication,
+  }) : _dio = Dio(BaseOptions(baseUrl: baseUrl)) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -28,31 +33,56 @@ class DioApiServices implements BaseApiServices {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          // if (error.response?.statusCode == 401) {
-          //   _token = null;
-          //   final newToken = await refreshToken();
-          //   if (newToken != null) {
-          //     final options = error.requestOptions;
-          //     options.headers['Authorization'] = 'Bearer $newToken';
-          //     AppLogger.debug(options.headers['Authorization']);
-          //
-          //     try {
-          //       final response = await _dio.request(
-          //         options.path,
-          //         options: Options(
-          //           method: options.method,
-          //           headers: options.headers,
-          //         ),
-          //         data: options.data,
-          //         queryParameters: options.queryParameters,
-          //       );
-          //
-          //       return handler.resolve(response);
-          //     } on DioException catch (e) {
-          //       return handler.reject(e);
-          //     }
-          //   }
-          // }
+          if (error.response?.statusCode == 401) {
+            final canCheckBiometric = await _checkBiometric(
+              localAuthentication,
+            );
+            if (!canCheckBiometric) {
+              return handler.next(error);
+            }
+            late List<BiometricType> availableBiometrics;
+            // try {
+            //   availableBiometrics = await localAuthentication
+            //       .getAvailableBiometrics();
+            // } catch (e) {
+            //   availableBiometrics = <BiometricType>[];
+            // }
+
+            bool authenticated = await localAuthentication.authenticate(
+              localizedReason:
+                  'Scan your fingerprint (or face or whatever) to authenticate',
+              options: const AuthenticationOptions(
+                stickyAuth: true,
+                biometricOnly: true,
+              ),
+            );
+            if (!authenticated) {
+              return handler.next(error);
+            }
+            _token = null;
+            final newToken = await refreshToken();
+            if (newToken != null) {
+              final options = error.requestOptions;
+              options.headers['Authorization'] = 'Bearer $newToken';
+              AppLogger.debug(options.headers['Authorization']);
+
+              try {
+                final response = await _dio.request(
+                  options.path,
+                  options: Options(
+                    method: options.method,
+                    headers: options.headers,
+                  ),
+                  data: options.data,
+                  queryParameters: options.queryParameters,
+                );
+
+                return handler.resolve(response);
+              } on DioException catch (e) {
+                return handler.reject(e);
+              }
+            }
+          }
 
           return handler.next(error);
         },
@@ -67,6 +97,14 @@ class DioApiServices implements BaseApiServices {
         responseHeader: true,
       ),
     );
+  }
+
+  Future<bool> _checkBiometric(LocalAuthentication localAuth) async {
+    try {
+      return await localAuth.canCheckBiometrics;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<String?> refreshToken() async {
